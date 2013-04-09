@@ -1,0 +1,435 @@
+/*jshint es5: true */
+
+var ideal = require("../ideal")
+,   dom = exports
+;
+
+dom.Phase = ideal.legacyEnum("NONE", "CAPTURING_PHASE", "AT_TARGET", "BUBBLING_PHASE");
+
+dom.Event = ideal.class()
+                    .importLegacyEnum(dom.Phase)
+                    .constructor
+                        .param(String, "type")
+                        .param({ bubbles: false, cancelable: false }, "options")
+                    .nonwritable
+                        .property(String, "type")
+                        .property(dom.EventTarget, "target").nullable
+                        .property(dom.EventTarget, "currentTarget").nullable
+                        .property(dom.Phase, "eventPhase")
+                        .property(Boolean, "bubbles")
+                        .property(Boolean, "cancelable")
+                        .property(Boolean, "defaultPrevented")
+                        .property(Boolean, "isTrusted").nonconfigurable
+                        .property(Date, "timeStamp")
+                    .method(null, "preventDefault")
+                    .method(null, "initEvent")
+                        .param(String, "type")
+                        .param(Boolean, "bubbles")
+                        .param(Boolean, "cancelable")
+;
+
+// class CustomEvent extends Event {
+//   constructor(String type,  { bubbles=false, cancelable=false, detail=null });
+//
+//   void initCustomEvent(String type, boolean bubbles, boolean cancelable, details);
+// }
+//
+// interface EventTarget {
+//   void addEventListener(String type, EventListener? callback, boolean capture=false);
+//   void removeEventListener(String type, EventListener? callback, boolean capture=false);
+//   boolean dispatchEvent(Event event);
+// }
+//
+// // TODO: Deal with this craziness
+// interface EventListener {
+//
+// }
+//
+// type Content = Node or String;
+//
+// interface ParentNode {
+//   nonwritable {
+//     property HTMLCollection children;
+//     property Element? firstElementChild;
+//     property Element? lastElementChild;
+//     property Number childElementCount;
+//   }
+//
+//   void prepend(Content ...nodes);
+// }
+//
+// interface ChildNode {
+//   property(nonwritable) Element? previousElementSibling;
+//   property(nonwritable) Element? nextElementSibling;
+//
+//   void before(Content ...nodes);
+//   void after(Content ...nodes);
+//   void replace(Content ...nodes);
+//   void remove();
+// }
+//
+// type MutationCallback = void (Array<MutationRecord> mutations, MutationObserver observer);
+//
+// options MutationObserverInit {
+//   boolean childList=false;
+//   boolean attributes=false;
+//   boolean characterData=false;
+//   boolean subtree=false;
+//   boolean attributeOldValue=false;
+//   boolean characterDataOldValue=false;
+//   Array<String> attributeFilter;
+// }
+//
+// class MutationObserver {
+//   constructor(MutationCallback callback);
+//
+//   void observe(Node target)
+// }
+//
+// class MutationRecord {
+//   nonwritable {
+//     property String type;
+//     property Node target;
+//     property NodeList addedNodes;
+//     property NodeList removedNodes;
+//     property Node? previousSibling;
+//     property Node? nextSibling;
+//     property String? attributeName;
+//     property String? attributeNamespace;
+//     property String? oldValue;
+//   }
+// }
+//
+// legacyEnum NodeType {
+//   ELEMENT_NODE = 1,
+//   ATTRIBUTE_NODE, // historical
+//   TEXT_NODE,
+//   CDATA_SECTION_NODE, // historical
+//   ENTITY_REFERENCE_NODE, // historical
+//   ENTITY_NODE, // historical
+//   PROCESSING_INSTRUCTION_NODE,
+//   COMMENT_NODE,
+//   DOCUMENT_NODE,
+//   DOCUMENT_TYPE_NODE,
+//   DOCUMENT_FRAGMENT_NODE,
+//   NOTATION_NODE // historical
+// }
+//
+// legacyMask DocumentPosition {
+//   DOCUMENT_POSITION_DISCONNECTED,
+//   DOCUMENT_POSITION_PRECEDING,
+//   DOCUMENT_POSITION_FOLLOWING,
+//   DOCUMENT_POSITION_CONTAINS,
+//   DOCUMENT_POSITION_CONTAINED_BY,
+//   DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC
+// }
+//
+// class Node extends EventTarget {
+//   [ImportLegacyEnum] NodeType;
+//   [ImportLegacyMask] DocumentPosition;
+//
+//   nonwritable {
+//     property NodeType nodeType;
+//     property String nodeName;
+//
+//     property String? baseURI;
+//
+//     property Document? ownerDocument;
+//     property Node? parentNode;
+//     property Element? parentElement;
+//   }
+//
+//   boolean hasChildNodes();
+//
+//   nonwritable {
+//     property NodeList childNodes;
+//     property Node? firstChild;
+//     property Node? lastChild;
+//     property Node? previousSibling;
+//     property Node? nextSibling;
+//   }
+//
+//   property String? nodeValue;
+//   property String? textContent;
+//
+//   void normalize();
+//
+//   Node cloneNode(boolean deep=true);
+//   boolean isEqualNode(Node? node);
+//
+//   DocumentPosition compareDocumentPosition(Node other);
+//   boolean contains(Node? other)
+//
+//   String lookupPrefix(String? namespace);
+//   String lookupNamespaceURI(String? prefix);
+//   boolean isDefaultNamespace(String? namespace);
+//
+//   Node insertBefore(Node node, Node? child);
+//   Node appendChild(Node node);
+//   Node replaceChild(Node node, Node child);
+//   Node removeChild(Node node);
+// }
+//
+// class Document extends Node {
+//   nonwritable {
+//     property DOMImplementation implementation;
+//     property String URL;
+//     property String documentURI;
+//     property String compatMode;
+//     property String characterSet;
+//     property String contentType;
+//
+//     property DocumentType? doctype;
+//     property Element? documentElement;
+//   }
+//
+//   HTMLCollection getElementsByTagName(String localName);
+//   HTMLCollection getElementsByTagNameNS(String? namespace, String localName);
+//   HTMLCollection getElementsByClassName(String classNames);
+//   Element? getElementById(String elementId);
+//
+//   Element createElement(String localName);
+//   Element createElementNS(String? namespace, String qualifiedName);
+//   DocumentFragment createDocumentFragment();
+//   Text createTextNode(String data);
+//   Comment createComment(String data);
+//   ProcessingInstruction createProcessingInstruction(String target, String data);
+//
+//   Node importNode(Node node, boolean deep=true);
+//   Node adoptNode(Node node);
+//
+//   Event createEvent(String interface);
+//   Range createRange();
+//
+//   NodeIterator createNodeIterator(Node root, Integer whatToShow=0xFFFFFFFF, NodeFilter? filter=null);
+//   TreeWalker createTreeWalker(Node root, Integer whatToShow=0xFFFFFFFF, NodeFilter? filter=null);
+// }
+//
+// class DOMImplementation {
+//   DocumentType createDocumentType(String qualifiedName, String publicId, String systemId);
+//   XMLDocument createDocument(String? namespace, String[1] qualifiedName, DocumentType? doctype);
+//   Document createHTMLDocument(String? title=undefined);
+//
+//   boolean hasFeature(String feature, String[1] version);
+//
+//   [1]: coerce null to ''
+// }
+//
+// class DOMFragment extends Node {}
+//
+// class DocumentType extends Node {
+//   nonwritable {
+//     property String name;
+//     property String publicId;
+//     property String systemId;
+//   }
+// }
+//
+// class Element extends Node {
+//   nonwritable {
+//     property String? namespaceURI;
+//     property String? prefix;
+//     property String localName;
+//     property String tagName;
+//     property String DOMTokenList classList;
+//   }
+//
+//   property String id;
+//   property String className;
+//
+//   property(nonwritable) Array<Attr> attributes;
+//   String? getAttribute(String name);
+//   String? getAttributeNS(String? namespace, String localName);
+//   void setAttribute(String name, String value);
+//   void setAttributeNS(String? namespace, String name, String value);
+//   void removeAttribute(String name);
+//   void removeAttributeNS(String? namespace, String localName);
+//   boolean hasAttribute(String name);
+//   boolean hasAttributeNS(String? namespace, String localName);
+//
+//   HTMLCollection getElementsByTagName(String localName);
+//   HTMLCollection getElementsByTagNameNS(String? namespace, String localName);
+//   HTMLCollection getElementsByClassName(String classNames);
+// }
+//
+// class Attr {
+//   nonwritable {
+//     property String localName;
+//     property String name;
+//     property String? namespaceURI;
+//     property String? prefix;
+//   }
+//
+//   property String value;
+// }
+//
+// // TODO: How are these Integers coerced
+// class CharacterData extends Node {
+//   property String[1] data;
+//   property(nonwritable) Integer length;
+//   String substringData(Integer offset, Integer count);
+//   void appendData(String data);
+//   void insertData(Integer offset, String data);
+//   void deleteData(Integer offset, Integer count);
+//   void replaceData(Integer offset, Integer count, String data);
+//
+//   [1]: coerce null to ''
+// };
+//
+// class Text extends CharacterData {
+//   constructor(String data='');
+//
+//   Text splitText(Integer offset);
+//   property(nonwritable) String wholeText;
+// }
+//
+// class ProcessingInstruction extends CharacterData {
+//   property(nonwritable) String target;
+// }
+//
+// class Comment extends CharacterData {
+//   constructor(String data='');
+// }
+//
+// legacyEnum BoundaryPoints {
+//   START_TO_START,
+//   START_TO_END,
+//   END_TO_END,
+//   END_TO_START
+// }
+//
+// class Range {
+//   [ImportLegacyEnum] BoundaryPoints;
+//
+//   nonwritable {
+//     property Node startContainer;
+//     property Integer startOffset;
+//     property Node endContainer;
+//     property Integer endOffset;
+//     property boolean collapsed;
+//     property Node commonAncestorContainer;
+//   }
+//
+//   void setStart(Node refNode, Integer offset);
+//   void setEnd(Node refNode, Integer offset);
+//   void setStartBefore(Node refNode);
+//   void setStartAfter(Node refNode);
+//   void setEndBefore(Node refNode);
+//   void setEndAfter(Node refNode);
+//   void collapse(boolean toStart);
+//   void selectNode(Node refNode);
+//   void selectNodeContents(Node refNode);
+//
+//   short compareBoundaryPoints(BoundaryPoints how, Range sourceRange);
+//
+//   void deleteContents();
+//   DocumentFragment extractContents();
+//   DocumentFragment cloneContents();
+//   void insertNode(Node node);
+//   void surroundContents(Node newParent);
+//
+//   Range cloneRange();
+//   void detach();
+//
+//   boolean isPointInRange(Node node, Integer offset);
+//   short comparePoint(Node node, Integer offset);
+//
+//   boolean intersectsNode(Node node);
+//
+//   String toString();
+// }
+//
+// legacyMask WhatToShow {
+//   SHOW_ELEMENT,
+//   SHOW_ATTRIBUTE, // historical
+//   SHOW_TEXT,
+//   SHOW_CDATA_SECTION, // historical
+//   SHOW_ENTITY_REFERENCE, // historical
+//   SHOW_ENTITY, // historical
+//   SHOW_PROCESSING_INSTRUCTION,
+//   SHOW_COMMENT,
+//   SHOW_DOCUMENT,
+//   SHOW_DOCUMENT_TYPE,
+//   SHOW_DOCUMENT_FRAGMENT,
+//   SHOW_NOTATION, // historical
+//   SHOW_ALL = 0xFFFFFFFF
+// }
+//
+// legacyEnum AcceptNode {
+//   FILTER_ACCEPT = 1,
+//   FILTER_REJECT = 2,
+//   FILTER_SKIP = 3
+// }
+//
+// class NodeIterator {
+//   nonwritable {
+//     property Node root;
+//     property Node? referenceNode;
+//     property boolean pointerBeforeReferenceNode;
+//     property WhatToShow whatToShow;
+//     property NodeFilter? filter;
+//   }
+//
+//   Node? nextNode();
+//   Node? previousNode();
+//
+//   void detach();
+// }
+//
+// class TreeWalker {
+//   nonwritable {
+//     property Node root;
+//     property WhatToShow whatToShow;
+//     property NodeFilter? filter;
+//   }
+//
+//   property Node currentNode;
+//
+//   Node? parentNode();
+//   Node? firstChild();
+//   Node? lastChild();
+//   Node? previousSibling();
+//   Node? nextSibling();
+//   Node? previousNode();
+//   Node? nextNode();
+// }
+//
+// // TODO
+// function NodeFilter {
+//
+// }
+//
+// class NodeList {
+//   // TODO: Coercion?
+//   [[Get]] Node?
+//   Node? item(Integer index);
+//
+//   property(nonwritable) Integer length;
+// }
+//
+// class HTMLCollection {
+//   property(nonwritable) Integer length;
+//   Element? [[Get]](Integer index);
+//   object? [[Get]](String name);
+//
+//   Element? item(Integer index);
+//   object? namedItem(String name);
+// };
+//
+// class DOMTokenList {
+//   property(nonwritable) Integer length;
+//
+//   String? [[Get]](String token);
+//   String? item(String token);
+//
+//   boolean contains(String token);
+//   void add(String... tokens);
+//   void remove(String... tokens);
+//   boolean toggle(String token, boolean? force);
+//
+//   String toString();
+// }
+//
+// class DOMSettableTokenList extends DOMTokenList {
+//   property String value;
+// }
