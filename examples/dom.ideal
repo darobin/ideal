@@ -6,7 +6,7 @@ var ideal = require("../ideal")
 
 dom.Phase = ideal.legacyEnum("NONE", "CAPTURING_PHASE", "AT_TARGET", "BUBBLING_PHASE");
 
-dom.Event = ideal.class()
+dom.Event = ideal.class
                     .importLegacyEnum(dom.Phase)
                     .constructor
                         .param(String, "type")
@@ -26,6 +26,9 @@ dom.Event = ideal.class()
                         .param(String, "type")
                         .param(Boolean, "bubbles")
                         .param(Boolean, "cancelable")
+;
+
+dom.CustomEvent = ideal.class
 ;
 
 // class CustomEvent extends Event {
@@ -433,3 +436,12 @@ dom.Event = ideal.class()
 // class DOMSettableTokenList extends DOMTokenList {
 //   property String value;
 // }
+
+console.log(JSON.stringify(dom, function (k, v) {
+        if (v === String) return "String";
+        if (v === Boolean) return "Boolean";
+        if (v === Number) return "Number";
+        if (v === Date) return "Date";
+        return v && v.toJSON ? v.toJSON() : v;
+    }, 4));
+// console.log(dom);
