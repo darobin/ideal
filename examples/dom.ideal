@@ -29,50 +29,63 @@ dom.Event = ideal.class
 ;
 
 dom.CustomEvent = ideal.class
+                            .extends(dom.Event)
+                            .constructor
+                                .param(String, "type")
+                                .param({bubbles: false, cancelable: false, detail: null}, "options")
+                            .method(null, "initCustomEvent")
+                                .param(String, "type")
+                                .param(Boolean, "bubbles")
+                                .param(Boolean, "cancelable")
+                                .param(ideal.any, "details")
 ;
 
-// class CustomEvent extends Event {
-//   constructor(String type,  { bubbles=false, cancelable=false, detail=null });
-//
-//   void initCustomEvent(String type, boolean bubbles, boolean cancelable, details);
-// }
-//
-// interface EventTarget {
-//   void addEventListener(String type, EventListener? callback, boolean capture=false);
-//   void removeEventListener(String type, EventListener? callback, boolean capture=false);
-//   boolean dispatchEvent(Event event);
-// }
-//
-// // TODO: Deal with this craziness
-// interface EventListener {
-//
-// }
-//
-// type Content = Node or String;
-//
-// interface ParentNode {
-//   nonwritable {
-//     property HTMLCollection children;
-//     property Element? firstElementChild;
-//     property Element? lastElementChild;
-//     property Number childElementCount;
-//   }
-//
-//   void prepend(Content ...nodes);
-// }
-//
-// interface ChildNode {
-//   property(nonwritable) Element? previousElementSibling;
-//   property(nonwritable) Element? nextElementSibling;
-//
-//   void before(Content ...nodes);
-//   void after(Content ...nodes);
-//   void replace(Content ...nodes);
-//   void remove();
-// }
-//
-// type MutationCallback = void (Array<MutationRecord> mutations, MutationObserver observer);
-//
+dom.EventTarget = ideal.interface
+                            .method(null, "addEventListener")
+                                .param(String, "type")
+                                .param(dom.EventListener, "callback").nullable
+                                .param(Boolean, "capture").default(false)
+                            .method(null, "removeEventListener")
+                                .param(String, "type")
+                                .param(dom.EventListener, "callback").nullable
+                                .param(Boolean, "capture").default(false)
+                            .method(Boolean, "dispatchEvent")
+                                .param(dom.Event, "event")
+;
+
+// TODO: Deal with this craziness
+dom.EventListener = ideal.interface;
+
+dom.Content = ideal.union(dom.Node, String);
+
+dom.ParentNode = ideal.interface
+                        .nonwritable
+                            .property(dom.HTMLCollection, "children")
+                            .property(dom.Element, "firstElementChild").nullable
+                            .property(dom.Element, "lastElementChild").nullable
+                            .property(Number, "childElementCount")
+                        .method(null, "prepend")
+                            .param(dom.Content, "nodes").variadic
+;
+
+dom.ChildNode = ideal.interface
+                        .nonwritable
+                            .property(dom.Element, "previousElementSibling").nullable
+                            .property(dom.Element, "nextElementSibling").nullable
+                        .method(null, "before")
+                            .param(dom.Content, "nodes").variadic
+                        .method(null, "after")
+                            .param(dom.Content, "nodes").variadic
+                        .method(null, "replace")
+                            .param(dom.Content, "nodes").variadic
+                        .method(null, "remove")
+;
+
+dom.MutationCallback = ideal.callback(null)
+                                .param([dom.MutationCallback], "mutations")
+                                .param(dom.MutationObserver, "observer")
+;
+
 // options MutationObserverInit {
 //   boolean childList=false;
 //   boolean attributes=false;
